@@ -120,7 +120,27 @@ Sistema_Alugueis_DB
 - 🎫 Tokens JWT para controle de sessão
 - 📝 Sistema completo de logs para auditoria
 
-## 🛠️ Setup Inicial
+## 🛠️ Setup e Deploy
+
+### 🌐 Deploy em Nuvem (Recomendado)
+
+**Coloque o sistema no ar em 10 minutos sem precisar de servidor local!**
+
+[![Deploy com Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/SajFritz/Gestao-de-Aluguel)
+
+📖 **Guia Rápido**: [INICIO_RAPIDO.md](./INICIO_RAPIDO.md)
+
+📚 **Guia Completo**: [DEPLOY_VERCEL.md](./DEPLOY_VERCEL.md)
+
+**Vantagens:**
+- ✅ 100% gratuito para projetos pessoais
+- ✅ HTTPS automático com certificado SSL
+- ✅ Deploy automático a cada push no GitHub
+- ✅ Sem necessidade de servidor ou configuração complexa
+
+---
+
+### 💻 Instalação Local (Desenvolvimento)
 
 ### Pré-requisitos
 - Node.js 18+ instalado
@@ -146,6 +166,8 @@ cp .env.example .env
 # Execute o projeto
 npm run dev
 ```
+
+📖 **Guia de Setup Local**: [SETUP_LOCAL.md](./SETUP_LOCAL.md)
 
 ### Criar Primeiro Usuário Admin
 
