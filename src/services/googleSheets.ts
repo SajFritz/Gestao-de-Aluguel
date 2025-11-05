@@ -40,8 +40,11 @@ export async function readSheet(
   range?: string
 ): Promise<any[][]> {
   try {
+    console.log(`[SHEETS] Lendo planilha ${sheetName}...`);
     const sheetsApi = getSheets();
     const spreadsheetId = process.env.GOOGLE_SHEET_ID;
+
+    console.log(`[SHEETS] Spreadsheet ID: ${spreadsheetId ? 'Configurado' : 'NÃO CONFIGURADO'}`);
 
     const fullRange = range ? `${sheetName}!${range}` : sheetName;
 
@@ -50,9 +53,11 @@ export async function readSheet(
       range: fullRange,
     });
 
+    console.log(`[SHEETS] Planilha ${sheetName} lida com sucesso. Linhas: ${response.data.values?.length || 0}`);
     return response.data.values || [];
   } catch (error) {
-    console.error(`Erro ao ler planilha ${sheetName}:`, error);
+    console.error(`[SHEETS] Erro ao ler planilha ${sheetName}:`, error);
+    console.error(`[SHEETS] Detalhes do erro:`, error instanceof Error ? error.message : String(error));
     throw new Error(`Falha ao ler dados da planilha ${sheetName}`);
   }
 }
@@ -279,9 +284,11 @@ export async function updateRecord<T extends { id: string }>(
   sheetName: string,
   record: T
 ): Promise<void> {
+  console.log(`[SHEETS] Atualizando registro ${record.id} na planilha ${sheetName}...`);
   const data = await readSheet(sheetName);
 
   if (data.length === 0) {
+    console.error(`[SHEETS] Planilha ${sheetName} não possui dados`);
     throw new Error(`Planilha ${sheetName} não possui dados`);
   }
 
@@ -291,11 +298,14 @@ export async function updateRecord<T extends { id: string }>(
   const rowIndex = rows.findIndex((row) => row[0] === record.id) + 2;
 
   if (rowIndex < 2) {
+    console.error(`[SHEETS] Registro com ID ${record.id} não encontrado`);
     throw new Error(`Registro com ID ${record.id} não encontrado`);
   }
 
+  console.log(`[SHEETS] Registro encontrado na linha ${rowIndex}`);
   const row = objectToRow(headers, record);
   await updateRow(sheetName, rowIndex, row);
+  console.log(`[SHEETS] Registro ${record.id} atualizado com sucesso`);
 }
 
 /**
