@@ -20,16 +20,55 @@ let sheets: any = null;
 function getSheets() {
   if (sheets) return sheets;
 
-  const auth = new google.auth.GoogleAuth({
-    credentials: {
-      client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-      private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
-    },
-    scopes: ["https://www.googleapis.com/auth/spreadsheets"],
-  });
+  // Validação das variáveis de ambiente
+  if (!process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL) {
+    console.error("[SHEETS] GOOGLE_SERVICE_ACCOUNT_EMAIL não configurado");
+    throw new Error("GOOGLE_SERVICE_ACCOUNT_EMAIL não está configurado");
+  }
 
-  sheets = google.sheets({ version: "v4", auth });
-  return sheets;
+  if (!process.env.GOOGLE_PRIVATE_KEY) {
+    console.error("[SHEETS] GOOGLE_PRIVATE_KEY não configurado");
+    throw new Error("GOOGLE_PRIVATE_KEY não está configurado");
+  }
+
+  if (!process.env.GOOGLE_SHEET_ID) {
+    console.error("[SHEETS] GOOGLE_SHEET_ID não configurado");
+    throw new Error("GOOGLE_SHEET_ID não está configurado");
+  }
+
+  // Tratamento da chave privada - remove aspas extras e corrige quebras de linha
+  let privateKey = process.env.GOOGLE_PRIVATE_KEY;
+
+  // Remove aspas duplas no início e fim (se houver)
+  privateKey = privateKey.replace(/^["']|["']$/g, '');
+
+  // Substitui \\n literal por quebra de linha real
+  privateKey = privateKey.replace(/\\n/g, '\n');
+
+  // Remove espaços em branco extras no início e fim
+  privateKey = privateKey.trim();
+
+  console.log("[SHEETS] Inicializando Google Sheets API...");
+  console.log("[SHEETS] Service Account:", process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL);
+  console.log("[SHEETS] Private Key início:", privateKey.substring(0, 30) + "...");
+  console.log("[SHEETS] Private Key contém quebras de linha:", privateKey.includes('\n'));
+
+  try {
+    const auth = new google.auth.GoogleAuth({
+      credentials: {
+        client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+        private_key: privateKey,
+      },
+      scopes: ["https://www.googleapis.com/auth/spreadsheets"],
+    });
+
+    sheets = google.sheets({ version: "v4", auth });
+    console.log("[SHEETS] Google Sheets API inicializado com sucesso");
+    return sheets;
+  } catch (error) {
+    console.error("[SHEETS] Erro ao inicializar Google Sheets API:", error);
+    throw error;
+  }
 }
 
 /**
