@@ -5,12 +5,28 @@ import { Inquilino } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, Pencil, Trash2 } from "lucide-react";
 import { formatCPF, formatPhone, formatCurrency } from "@/utils/format";
+import { InquilinoFormDialog } from "@/components/inquilino-form-dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function InquilinosPage() {
   const [inquilinos, setInquilinos] = useState<Inquilino[]>([]);
   const [loading, setLoading] = useState(true);
+  const [formOpen, setFormOpen] = useState(false);
+  const [editingInquilino, setEditingInquilino] = useState<Inquilino | undefined>(undefined);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [inquilinoToDelete, setInquilinoToDelete] = useState<Inquilino | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     fetchInquilinos();
@@ -34,6 +50,52 @@ export default function InquilinosPage() {
     }
   };
 
+  const handleNewInquilino = () => {
+    setEditingInquilino(undefined);
+    setFormOpen(true);
+  };
+
+  const handleEditInquilino = (inquilino: Inquilino) => {
+    setEditingInquilino(inquilino);
+    setFormOpen(true);
+  };
+
+  const handleDeleteClick = (inquilino: Inquilino) => {
+    setInquilinoToDelete(inquilino);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!inquilinoToDelete) return;
+
+    try {
+      setIsDeleting(true);
+      const token = localStorage.getItem("token");
+      const response = await fetch(`/api/inquilinos/${inquilinoToDelete.id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        await fetchInquilinos();
+        setDeleteDialogOpen(false);
+        setInquilinoToDelete(null);
+      } else {
+        alert(data.error || "Erro ao excluir inquilino");
+      }
+    } catch (error) {
+      console.error("Erro ao excluir inquilino:", error);
+      alert("Erro ao excluir inquilino");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleFormSuccess = () => {
+    fetchInquilinos();
+  };
+
   if (loading) {
     return <div className="flex items-center justify-center h-96">Carregando...</div>;
   }
@@ -45,7 +107,7 @@ export default function InquilinosPage() {
           <h1 className="text-3xl font-bold text-gray-900">Inquilinos</h1>
           <p className="text-gray-500 mt-1">Gerencie os inquilinos cadastrados</p>
         </div>
-        <Button className="gap-2">
+        <Button className="gap-2" onClick={handleNewInquilino}>
           <Plus className="w-4 h-4" />
           Novo Inquilino
         </Button>
@@ -65,12 +127,13 @@ export default function InquilinosPage() {
                 <TableHead>Email</TableHead>
                 <TableHead>Profissão</TableHead>
                 <TableHead>Renda</TableHead>
+                <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {inquilinos.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-gray-500">
+                  <TableCell colSpan={7} className="text-center text-gray-500">
                     Nenhum inquilino cadastrado
                   </TableCell>
                 </TableRow>
@@ -85,6 +148,24 @@ export default function InquilinosPage() {
                     <TableCell>
                       {inquilino.renda_mensal ? formatCurrency(inquilino.renda_mensal) : "-"}
                     </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEditInquilino(inquilino)}
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteClick(inquilino)}
+                        >
+                          <Trash2 className="w-4 h-4 text-red-500" />
+                        </Button>
+                      </div>
+                    </TableCell>
                   </TableRow>
                 ))
               )}
@@ -92,6 +173,36 @@ export default function InquilinosPage() {
           </Table>
         </CardContent>
       </Card>
+
+      <InquilinoFormDialog
+        open={formOpen}
+        onOpenChange={setFormOpen}
+        inquilino={editingInquilino}
+        onSuccess={handleFormSuccess}
+      />
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir o inquilino{" "}
+              <strong>{inquilinoToDelete?.nome}</strong>
+              ? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              disabled={isDeleting}
+              className="bg-red-500 hover:bg-red-600"
+            >
+              {isDeleting ? "Excluindo..." : "Excluir"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
