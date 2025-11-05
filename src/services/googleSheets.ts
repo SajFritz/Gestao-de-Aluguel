@@ -334,10 +334,18 @@ export async function updateRecord<T extends { id: string }>(
   const [headers, ...rows] = data;
 
   // Encontra o índice da linha (começando em 2, pois 1 é o header)
-  const rowIndex = rows.findIndex((row) => row[0] === record.id) + 2;
+  // Converte ambos para string para garantir a comparação correta
+  console.log(`[SHEETS] Procurando registro com ID: ${record.id} (tipo: ${typeof record.id})`);
+  const rowIndex = rows.findIndex((row) => {
+    const rowId = String(row[0]);
+    const recordId = String(record.id);
+    console.log(`[SHEETS] Comparando: rowId="${rowId}" vs recordId="${recordId}"`);
+    return rowId === recordId;
+  }) + 2;
 
   if (rowIndex < 2) {
     console.error(`[SHEETS] Registro com ID ${record.id} não encontrado`);
+    console.error(`[SHEETS] IDs disponíveis na planilha:`, rows.map(row => row[0]));
     throw new Error(`Registro com ID ${record.id} não encontrado`);
   }
 
@@ -363,7 +371,8 @@ export async function deleteRecord(
   const [, ...rows] = data;
 
   // Encontra o índice da linha (começando em 2, pois 1 é o header)
-  const rowIndex = rows.findIndex((row) => row[0] === id) + 2;
+  // Converte ambos para string para garantir a comparação correta
+  const rowIndex = rows.findIndex((row) => String(row[0]) === String(id)) + 2;
 
   if (rowIndex < 2) {
     throw new Error(`Registro com ID ${id} não encontrado`);
