@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: gestao-aluguel
+    runtime: node
+    nodeVersion: "18.18.0"
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: GOOGLE_SHEET_ID
+        sync: false
+      - key: GOOGLE_SERVICE_ACCOUNT_EMAIL
+        sync: false
+      - key: GOOGLE_PRIVATE_KEY
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: NEXT_PUBLIC_API_URL
+        sync: false
